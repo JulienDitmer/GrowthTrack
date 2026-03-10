@@ -57,7 +57,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding-bottom: 80px;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
       padding-top: 16px;
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
@@ -266,13 +266,13 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: 60px;
-      padding-bottom: max(0px, env(safe-area-inset-bottom));
+      height: calc(60px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
       background: var(--surface);
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-around;
-      align-items: center;
+      align-items: flex-start;
       z-index: 100;
     }
 
@@ -1302,12 +1302,8 @@
       return Math.floor(s / 86400) + 'd';
     };
 
-    // Demo data
-    const DEMO_USERS = [
-      { uid: 'demo1', name: 'Julien', email: 'julien@demo.com' },
-      { uid: 'demo2', name: 'Emma', email: 'emma@demo.com' },
-      { uid: 'demo3', name: 'Lars', email: 'lars@demo.com' }
-    ];
+    // Load real users from localStorage (no fake demo users)
+    const DEMO_USERS = [];
 
     function calcStats(uid, goals) {
       const checkins = {};
@@ -2311,9 +2307,12 @@
       useEffect(() => {
         setProfile(JSON.parse(localStorage.getItem(`gt_profile_${user.uid}`) || '{}'));
 
-        if (DEMO_MODE) {
-          setFriends(DEMO_USERS.filter(u => u.uid !== user.uid));
-        }
+        // Load real users from localStorage (anyone who has logged in on this device)
+        const realFriends = Object.keys(localStorage)
+          .filter(k => k.startsWith('gt_profile_') && !k.includes(user.uid))
+          .map(k => JSON.parse(localStorage.getItem(k) || '{}'))
+          .filter(p => p.uid && p.name);
+        setFriends(realFriends);
 
         const msgs = JSON.parse(localStorage.getItem('gt_chat') || '[]');
         setChatMessages(msgs);
